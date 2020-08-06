@@ -79,7 +79,7 @@ CONTRACT filehashfact : public eosio::contract {
     check(hashitr->author != signor, "Author of the file does not need to endorse it");
 
     auto endidx = _endorsements.get_index<name("fileid")>();
-    auto enditr = endidx.lower_bound(hashitr->id);
+    auto enditr = endidx.lower_bound(hashitr->id * FILEID_MULTIPPLIER);
     int count = 0;
     while( enditr != endidx.end() && enditr->file_id == hashitr->id ) {
       check(enditr->signed_by != signor, "This signor has already endorsed this hash");
@@ -113,7 +113,7 @@ CONTRACT filehashfact : public eosio::contract {
     auto endidx = _endorsements.get_index<name("fileid")>();
 
     while( count-- > 0 && fileitr != fileidx.end() && fileitr->expires_on <= _now ) {
-      auto enditr = endidx.lower_bound(fileitr->id);
+      auto enditr = endidx.lower_bound(fileitr->id * FILEID_MULTIPPLIER);
       while( enditr != endidx.end() && enditr->file_id == fileitr->id ) {
         enditr = endidx.erase(enditr);
       }
