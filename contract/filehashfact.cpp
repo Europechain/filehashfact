@@ -1,5 +1,5 @@
 /*
-Copyright 2020 Europechain.io, cc32d9@gmail.com
+  Copyright (c) 2020 EOS Amsterdam
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

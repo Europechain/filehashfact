@@ -1,0 +1,129 @@
+#!/usr/bin/env node
+
+/*
+  Copyright (c) 2020 EOS Amsterdam
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
+
+
+const program     = require('commander');
+const fetch = require('node-fetch');
+
+
+                  
+program                         
+    .option('--url [value]', 'nodeos API URL', 'https://api.europechain.io')
+    .option('--account [value]', 'filehashfact contract account name', 'filehashfact')
+    .requiredOption('--hash [value]', 'sha256 of a file to verify') 
+    .parse(process.argv);
+
+if (program.url) {
+    
+    filehashfact_check(program.url, program.account, program.hash)
+        .then(data => {
+            console.log(JSON.stringify(data, null, 2));
+            process.exit(0);
+        });
+} else {
+    program.help();
+}
+
+
+async function filehashfact_check(url, acc, hash, callback) {
+    return fetch(url + '/v1/chain/get_table_rows', {
+        method: 'post',
+        body:    JSON.stringify({
+            json: 'true',
+            code: acc,
+            scope: '0',
+            table: 'files',
+            index_position: '2',
+            key_type: 'i256',
+            lower_bound: '0x' + hash,
+            upper_bound: '0x' + hash,
+            limit: 1
+        }),
+        headers: { 'Content-Type': 'application/json' }
+    }).then(res => res.json())
+        .then(async (data) => {
+            
+            let ret = new Map();
+            
+            if( data.rows.length != 1 ) {
+                return {error: 'Hash not found'};
+            }
+            else {
+                row = data.rows[0];
+                ret['file'] = {
+                    author: row.author,
+                    filename: row.filename,
+                    description: row.description,
+                    hash: row.hash,
+                    trxid: row.trxid,
+                    added_on: row.added_on,
+                    expires_on: row.expires_on
+                };
+
+                let idx_low = BigInt("0x100000000") * BigInt(row.id);
+                let idx_up = BigInt("0x100000000") * BigInt(row.id + 1);
+                ret['endorsements'] = await fetch_endorsements(url, acc, idx_low, idx_up);
+            }
+            return ret;
+        });
+}
+
+
+async function fetch_endorsements(url, acc, idx_low, idx_up) {
+    let ret = new Array();
+    
+    let response = await fetch(url + '/v1/chain/get_table_rows', {
+        method: 'post',
+        body:    JSON.stringify({
+            json: 'true',
+            code: acc,
+            scope: '0',
+            table: 'endorsements',
+            index_position: '2',
+            key_type: 'i64',
+            lower_bound: idx_low.toString(),
+            upper_bound: idx_up.toString(),
+        }),
+        headers: { 'Content-Type': 'application/json' },
+    });
+
+    let data = await response.json();    
+    data.rows.forEach(function(row) {
+        ret.push({
+            signed_by: row.signed_by,
+            trxid: row.trxid,
+            signed_on: row.signed_on
+        });
+    });
+
+    if( data.more ) {
+        return ret.concat( await fetch_endorsements(url, acc, data.next_key, idx_up) );
+    }
+
+    return ret;
+}
+
+
+
+
+/*
+ Local Variables:
+ mode: javascript
+ indent-tabs-mode: nil
+ End:
+*/

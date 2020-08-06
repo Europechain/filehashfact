@@ -1,0 +1,24 @@
+{
+    "name": "filehashfact",
+    "version": "0.0.1",
+    "description": "CLI tools for filehashfact contract",
+    "license": "MIT",
+    "author": {
+        "name": "cc32d9 | EOS Amsterdam",
+        "url": "https://github.com/eos-amsterdam-rnd"
+    },
+    "engines": {
+        "node": ">= 12.0.0"
+    },
+    "bin": {
+        "filehashfact_check": "./bin/filehashfact_check"
+    },
+    "main": "index.js",
+    "files": [
+        "README.md"
+    ],
+    "dependencies": {
+        "commander": ">=2.19.0",
+        "node-fetch": ">= 2.6.0"
+    }
+}
