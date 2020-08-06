@@ -27,7 +27,9 @@ using std::vector;
 
 const uint64_t EXPIRES_SECONDS = 365 * 3600 * 24;
 const int MAX_ENDORSEMENTS = 16;
+
 const uint64_t FILEID_MULTIPPLIER = 0x100000000;
+const uint64_t ROWID_MAX = 0xFFFFFFFF;
 
 
 CONTRACT filehashfact : public eosio::contract {
@@ -52,7 +54,7 @@ CONTRACT filehashfact : public eosio::contract {
     _files.emplace(author,
                    [&]( auto& f ) {
                      f.id = _files.available_primary_key();
-                     check(f.id < FILEID_MULTIPPLIER, "Cannot register more than uint32_max files");
+                     check(f.id <= ROWID_MAX, "Cannot register more than uint32_max files");
                      f.author = author;
                      f.filename = filename;
                      f.description = description;
@@ -90,6 +92,7 @@ CONTRACT filehashfact : public eosio::contract {
     _endorsements.emplace(signor,
                           [&]( auto& e ) {
                             e.id = _endorsements.available_primary_key();
+                            check(e.id <= ROWID_MAX, "Cannot register more than uint32_max ENDORSEMENTS");
                             e.file_id = hashitr->id;
                             e.signed_by = signor;
                             e.trxid = get_trxid();
