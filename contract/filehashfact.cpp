@@ -25,15 +25,17 @@ limitations under the License.
 using namespace eosio;
 using std::vector;
 
+const uint64_t EXPIRES_SECONDS = 365 * 3600 * 24;
+const int MAX_ENDORSEMENTS = 16;
+const uint64_t FILEID_MULTIPPLIER = 0x100000000;
+
+
 CONTRACT filehashfact : public eosio::contract {
  public:
   filehashfact( name self, name code, datastream<const char*> ds ):
     contract(self, code, ds)
     {}
 
-  const uint64_t EXPIRES_SECONDS = 365 * 3600 * 24;
-
-  const int MAX_ENDORSEMENTS = 16;
 
   ACTION addfile(name author, checksum256 hash, string filename, string description)
   {
@@ -50,7 +52,7 @@ CONTRACT filehashfact : public eosio::contract {
     _files.emplace(author,
                    [&]( auto& f ) {
                      f.id = _files.available_primary_key();
-                     check(f.id <= 0xFFFFFFFF, "Cannot register more than uint32_max files");
+                     check(f.id < FILEID_MULTIPPLIER, "Cannot register more than uint32_max files");
                      f.author = author;
                      f.filename = filename;
                      f.description = description;
@@ -165,7 +167,7 @@ CONTRACT filehashfact : public eosio::contract {
     time_point_sec   signed_on;
 
     auto primary_key()const { return id; }
-    uint64_t get_fileid_ref() const { return id + file_id*0x100000000; }
+    uint64_t get_fileid_ref() const { return id + file_id * FILEID_MULTIPPLIER; }
   };
 
   typedef eosio::multi_index<name("endorsements"), endorsement,
