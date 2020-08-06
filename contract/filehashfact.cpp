@@ -31,7 +31,7 @@ CONTRACT filehashfact : public eosio::contract {
     contract(self, code, ds)
     {}
 
-  const uint64_t EXPIRES_SECONDS = 31536000; // 365 days
+  const uint64_t EXPIRES_SECONDS = 365 * 3600 * 24;
 
   const int MAX_ENDORSEMENTS = 16;
 
@@ -50,6 +50,7 @@ CONTRACT filehashfact : public eosio::contract {
     _files.emplace(author,
                    [&]( auto& f ) {
                      f.id = _files.available_primary_key();
+                     check(f.id <= 0xFFFFFFFF, "Cannot register more than uint32_max files");
                      f.author = author;
                      f.filename = filename;
                      f.description = description;
@@ -152,6 +153,10 @@ CONTRACT filehashfact : public eosio::contract {
     indexed_by<name("expires"), const_mem_fun<file, uint64_t, &file::get_expires>>
     > files;
 
+
+  // secondary index is uint64 with upper 32 bits representing the file ID.
+  // this way, get_table_rows can be resumed if there are too many entries for a
+  // single response
   struct [[eosio::table("endorsements")]] endorsement {
     uint64_t         id;             /* autoincrement */
     uint64_t         file_id;
@@ -160,10 +165,10 @@ CONTRACT filehashfact : public eosio::contract {
     time_point_sec   signed_on;
 
     auto primary_key()const { return id; }
-    uint64_t get_fileid() const { return file_id; }
+    uint64_t get_fileid_ref() const { return id + file_id*0x100000000; }
   };
 
   typedef eosio::multi_index<name("endorsements"), endorsement,
-    indexed_by<name("fileid"), const_mem_fun<endorsement, uint64_t, &endorsement::get_fileid>>> endorsements;
+    indexed_by<name("fileid"), const_mem_fun<endorsement, uint64_t, &endorsement::get_fileid_ref>>> endorsements;
 
 };
