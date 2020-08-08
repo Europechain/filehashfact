@@ -13,7 +13,8 @@ file hashes. By doing so, the users confirm the file validity. The
 contract accepts up to 16 endorsements for each file.
 
 Each signor or co-signor pays for the RAM allocation required to store
-the data.
+the data. An endorsement takes about 300-350 bytes of the co-signor
+RAM, depending on the length of the memo string.
 
 The file entries are held for 365 days, and then anyone can release
 the memory by executing `wipeexpired` action.
