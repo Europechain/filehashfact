@@ -79,10 +79,18 @@ Testing:
 ## Blockchain deployments
 
 The smart contract is deployed into the account `filehashfact` on the
-following EOSIO chains:
+following EOSIO chains (with their corresponding API endpoints):
 
+* BOS Mainnet (`https://api.bossweden.org`)
+
+* Europechain (`https://api.xec.cryptolions.io`)
+
+* Telos Mainnet (`https://telos.eu.eosamsterdam.net`)
+
+* WAX Mainnet (`https://wax.eu.eosamsterdam.net`)
 
 * WAX Testnet (`https://testnet.waxsweden.org`)
+
 
 
 
