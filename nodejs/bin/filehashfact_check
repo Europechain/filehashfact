@@ -106,6 +106,7 @@ async function fetch_endorsements(url, acc, idx_low, idx_up) {
     data.rows.forEach(function(row) {
         ret.push({
             signed_by: row.signed_by,
+            memo: row.memo,
             trxid: row.trxid,
             signed_on: row.signed_on
         });

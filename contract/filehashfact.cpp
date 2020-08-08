@@ -67,7 +67,7 @@ CONTRACT filehashfact : public eosio::contract {
 
 
 
-  ACTION endorse(name signor, checksum256 hash)
+  ACTION endorse(name signor, checksum256 hash, string memo)
   {
     require_auth(signor);
     files _files(_self, 0);
@@ -95,6 +95,7 @@ CONTRACT filehashfact : public eosio::contract {
                             check(e.id <= ROWID_MAX, "Cannot register more than uint32_max ENDORSEMENTS");
                             e.file_id = hashitr->id;
                             e.signed_by = signor;
+                            e.memo = memo;
                             e.trxid = get_trxid();
                             e.signed_on = time_point_sec(current_time_point());
                           });
@@ -166,6 +167,7 @@ CONTRACT filehashfact : public eosio::contract {
     uint64_t         id;             /* autoincrement */
     uint64_t         file_id;
     name             signed_by;
+    string           memo;
     checksum256      trxid;
     time_point_sec   signed_on;
 

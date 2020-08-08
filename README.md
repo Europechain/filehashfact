@@ -39,7 +39,7 @@ wtcleos push action filehashfact addfile '["cc32dninexxx", "3ea0319ed6e1472c1b44
 Endorsing (co-signing):
 
 ```
-wtcleos push action filehashfact endorse '["testuser2111", "a2bd7551df9acccf7a43f584d4989e2c3b8c87b7622d7b832099fc928f1b77e4"]' -p testuser2111
+wtcleos push action filehashfact endorse '["testuser2111", "a2bd7551df9acccf7a43f584d4989e2c3b8c87b7622d7b832099fc928f1b77e4", "tested, all good"]' -p testuser2111
 
 
 ```
