@@ -77,6 +77,7 @@ CONTRACT filehashfact : public eosio::contract {
     auto hashitr = hashidx.find(hash);
     check(hashidx.find(hash) != hashidx.end(), "Cannot find this file hash");
     check(hashitr->author != signor, "Author of the file does not need to endorse it");
+    require_recipient(hashitr->author);
 
     auto endidx = _endorsements.get_index<name("fileid")>();
     auto enditr = endidx.lower_bound(hashitr->id * FILEID_MULTIPPLIER);
