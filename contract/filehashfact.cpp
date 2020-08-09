@@ -31,6 +31,8 @@ const int MAX_ENDORSEMENTS = 16;
 const uint64_t FILEID_MULTIPPLIER = 0x100000000;
 const uint64_t ROWID_MAX = 0xFFFFFFFF;
 
+const int MAX_SUBSCRIBERS = 3;
+
 
 CONTRACT filehashfact : public eosio::contract {
  public:
@@ -63,6 +65,14 @@ CONTRACT filehashfact : public eosio::contract {
                      f.added_on = _now;
                      f.expires_on = _now + EXPIRES_SECONDS;
                    });
+    
+    subscriptions _subscriptions(_self, 0);
+    auto itr = _subscriptions.find(author.value);
+    if( itr != _subscriptions.end() ) {
+      for( name rcpt: itr->subscribers ) {
+        require_recipient(rcpt);
+      }
+    }
   }
 
 
@@ -79,6 +89,14 @@ CONTRACT filehashfact : public eosio::contract {
     check(hashitr->author != signor, "Author of the file does not need to endorse it");
     require_recipient(hashitr->author);
 
+    subscriptions _subscriptions(_self, 0);
+    auto itr = _subscriptions.find(hashitr->author.value);
+    if( itr != _subscriptions.end() ) {
+      for( name rcpt: itr->subscribers ) {
+        require_recipient(rcpt);
+      }
+    }
+    
     auto endidx = _endorsements.get_index<name("fileid")>();
     auto enditr = endidx.lower_bound(hashitr->id * FILEID_MULTIPPLIER);
     int count = 0;
@@ -125,7 +143,39 @@ CONTRACT filehashfact : public eosio::contract {
     check(done_something, "There are no expired entries");
   }
 
+  
+  ACTION subscribe(name author, vector<name> recipients)
+  {
+    require_auth(author);
 
+    check(recipients.size() <= MAX_SUBSCRIBERS, "Too many subscribers");
+    std::set<name> seen;
+    for (name rcpt: recipients) {
+      check(rcpt != author, "Author cannot be a subscriber");
+      check(seen.count(rcpt) == 0, "Repeating recipient");
+      seen.insert(rcpt);
+    }
+    
+    subscriptions _subscriptions(_self, 0);
+    auto itr = _subscriptions.find(author.value);
+    if( itr != _subscriptions.end() ) {
+      if( recipients.size() == 0 ) {
+        _subscriptions.erase(*itr);
+      }
+      else {
+        _subscriptions.modify(*itr, author, [&]( auto& item ) {
+                                              item.subscribers = recipients;
+                                            });
+      }
+    }
+    else {
+      check(recipients.size() > 0, "The list is empty");
+      _subscriptions.emplace(author, [&]( auto& item ) {
+                                       item.author = author;
+                                       item.subscribers = recipients;
+                                     });
+    }
+  }
 
  private:
 
@@ -179,4 +229,12 @@ CONTRACT filehashfact : public eosio::contract {
   typedef eosio::multi_index<name("endorsements"), endorsement,
     indexed_by<name("fileid"), const_mem_fun<endorsement, uint64_t, &endorsement::get_fileid_ref>>> endorsements;
 
+
+  struct [[eosio::table("subscribers")]] subscription {
+    name             author;
+    vector<name>     subscribers;
+    auto primary_key()const { return author.value; }
+  };
+
+  typedef eosio::multi_index<name("subscribers"), subscription> subscriptions;
 };
