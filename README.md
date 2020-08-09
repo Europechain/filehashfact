@@ -96,16 +96,41 @@ Testing:
 The smart contract is deployed into the account `filehashfact` on the
 following EOSIO chains (with their corresponding API endpoints):
 
-* BOS Mainnet (`https://api.bossweden.org`)
+* BOS (`https://api.bossweden.org`)
+
+* EOS (`https://mainnet.eosamsterdam.net`)
 
 * Europechain (`https://api.xec.cryptolions.io`)
 
-* Telos Mainnet (`https://telos.eu.eosamsterdam.net`)
+* Telos (`https://telos.eu.eosamsterdam.net`)
 
-* WAX Mainnet (`https://wax.eu.eosamsterdam.net`)
+* WAX (`https://wax.eu.eosamsterdam.net`)
 
 * WAX Testnet (`https://testnet.waxsweden.org`)
 
+
+
+## Verifying the smart contract
+
+```
+$ cleos -u https://mainnet.eosamsterdam.net get code filehashfact
+code hash: 60cd6b9dc8041238aa9be56f0a5a05dc0efe5adb6f3d29b613cca02b4a708121
+
+$ ~/build/filehashfact/nodejs/bin/filehashfact_check --url https://api.xec.cryptolions.io --hash 60cd6b9dc8041238aa9be56f0a5a05dc0efe5adb6f3d29b613cca02b4a708121
+{
+  "file": {
+    "author": "cc32dninexxx",
+    "filename": "filehashfact.wasm",
+    "description": "https://github.com/Europechain/filehashfact/releases/tag/release_1.1",
+    "hash": "60cd6b9dc8041238aa9be56f0a5a05dc0efe5adb6f3d29b613cca02b4a708121",
+    "trxid": "64ae07444262d89f56f65598089132666c7a5b644d3dbd022859f16d385decee",
+    "added_on": "2020-08-09T12:21:39",
+    "expires_on": "2021-08-09T12:21:39"
+  },
+  "endorsements": []
+}
+
+```
 
 
 
