@@ -104,6 +104,8 @@ following EOSIO chains (with their corresponding API endpoints):
 
 * Telos (`https://telos.eu.eosamsterdam.net`)
 
+* Telos Testnet (`https://testnet.persiantelos.com`)
+
 * WAX (`https://wax.eu.eosamsterdam.net`)
 
 * WAX Testnet (`https://testnet.waxsweden.org`)
