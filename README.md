@@ -16,8 +16,10 @@ Each signor or co-signor pays for the RAM allocation required to store
 the data. An endorsement takes about 300-350 bytes of the co-signor
 RAM, depending on the length of the memo string.
 
-The file entries are held for 365 days, and then anyone can release
-the memory by executing `wipeexpired` action.
+The file entries are held for 365 days by default, and the expiration
+term can be modified, but not shorter than 14 days from current
+moment, and not longer than 730 days. When a file entry expires,
+anyone can release the memory by executing `wipeexpired` action.
 
 
 ## Usage
@@ -41,6 +43,15 @@ wtcleos push action filehashfact addfile '["cc32dninexxx", "a2bd7551df9acccf7a43
 wtcleos push action filehashfact addfile '["cc32dninexxx", "3ea0319ed6e1472c1b44e2780fc3a9f508ccabf7623e44a42e314004c64440d6", "wax_2.0.6wax02-1-ubuntu-18.04_amd64.deb", "http://apt.eossweden.org/wax/pool/testing/w/wax/wax_2.0.6wax02-1-ubuntu-18.04_amd64.deb"]' -p cc32dninexxx
 
 ```
+
+
+Optionally modifying the expiration date, in days from current moment:
+
+```
+wtcleos push action filehashfact expirein '["a2bd7551df9acccf7a43f584d4989e2c3b8c87b7622d7b832099fc928f1b77e4", 30]' -p cc32dninexxx
+
+```
+
 
 Endorsing (co-signing):
 
@@ -95,8 +106,6 @@ Testing:
 
 The smart contract is deployed into the account `filehashfact` on the
 following EOSIO chains (with their corresponding API endpoints):
-
-* BOS (`https://api.bossweden.org`)
 
 * EOS (`https://mainnet.eosamsterdam.net`)
 

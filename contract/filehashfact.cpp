@@ -26,12 +26,15 @@ using namespace eosio;
 using std::vector;
 
 const uint64_t EXPIRES_SECONDS = 365 * 3600 * 24;
+
+const int MIN_EXPIRE_DAYS = 14;
+const int MAX_EXPIRE_DAYS = 730;
 const int MAX_ENDORSEMENTS = 16;
+const int MAX_SUBSCRIBERS = 3;
 
 const uint64_t FILEID_MULTIPPLIER = 0x100000000;
 const uint64_t ROWID_MAX = 0xFFFFFFFF;
 
-const int MAX_SUBSCRIBERS = 3;
 
 
 CONTRACT filehashfact : public eosio::contract {
@@ -65,7 +68,7 @@ CONTRACT filehashfact : public eosio::contract {
                      f.added_on = _now;
                      f.expires_on = _now + EXPIRES_SECONDS;
                    });
-    
+
     subscriptions _subscriptions(_self, 0);
     auto itr = _subscriptions.find(author.value);
     if( itr != _subscriptions.end() ) {
@@ -76,12 +79,44 @@ CONTRACT filehashfact : public eosio::contract {
   }
 
 
+  ACTION expirein(checksum256 hash, uint16_t days)
+  {
+    check(days >= MIN_EXPIRE_DAYS, "expiration term is too short");
+    check(days <= MAX_EXPIRE_DAYS, "expiration term is too long");
+
+    files _files(_self, 0);
+    auto hashidx = _files.get_index<name("hash")>();
+    auto hashitr = hashidx.find(hash);
+    check(hashidx.find(hash) != hashidx.end(), "Cannot find this file hash");
+    require_auth(hashitr->author);
+
+    _files.modify(*hashitr, same_payer,
+                  [&]( auto& f ) {
+                    f.expires_on = time_point_sec(current_time_point()) + (days * 3600 * 24);
+                  });
+
+    subscriptions _subscriptions(_self, 0);
+    auto itr = _subscriptions.find(hashitr->author.value);
+    if( itr != _subscriptions.end() ) {
+      for( name rcpt: itr->subscribers ) {
+        require_recipient(rcpt);
+      }
+    }
+
+    endorsements _endorsements(_self, 0);
+    auto endidx = _endorsements.get_index<name("fileid")>();
+    auto enditr = endidx.lower_bound(hashitr->id * FILEID_MULTIPPLIER);
+    while( enditr != endidx.end() && enditr->file_id == hashitr->id ) {
+      require_recipient(enditr->signed_by);
+      enditr++;
+    }
+  }
+
 
   ACTION endorse(name signor, checksum256 hash, string memo)
   {
     require_auth(signor);
     files _files(_self, 0);
-    endorsements _endorsements(_self, 0);
 
     auto hashidx = _files.get_index<name("hash")>();
     auto hashitr = hashidx.find(hash);
@@ -96,7 +131,8 @@ CONTRACT filehashfact : public eosio::contract {
         require_recipient(rcpt);
       }
     }
-    
+
+    endorsements _endorsements(_self, 0);
     auto endidx = _endorsements.get_index<name("fileid")>();
     auto enditr = endidx.lower_bound(hashitr->id * FILEID_MULTIPPLIER);
     int count = 0;
@@ -143,7 +179,7 @@ CONTRACT filehashfact : public eosio::contract {
     check(done_something, "There are no expired entries");
   }
 
-  
+
   ACTION subscribe(name author, vector<name> recipients)
   {
     require_auth(author);
@@ -155,7 +191,7 @@ CONTRACT filehashfact : public eosio::contract {
       check(seen.count(rcpt) == 0, "Repeating recipient");
       seen.insert(rcpt);
     }
-    
+
     subscriptions _subscriptions(_self, 0);
     auto itr = _subscriptions.find(author.value);
     if( itr != _subscriptions.end() ) {
